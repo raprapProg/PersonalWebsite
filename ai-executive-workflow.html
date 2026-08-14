@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Executive Workflow — Case File Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#122040;
+    --ink-2:#1b2e52;
+    --parchment:#f6f1e4;
+    --parchment-2:#efe8d6;
+    --brass:#b8862e;
+    --brass-deep:#7a5518;
+    --stamp-red:#8b3a3a;
+    --text-dark:#26221a;
+    --text-muted:#6b6455;
+    --line:#d8cfb8;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--ink);
+    background-image:
+      radial-gradient(ellipse at top left, var(--ink-2), var(--ink) 60%);
+    color:var(--parchment);
+    font-family:'Inter',system-ui,sans-serif;
+    padding:40px 20px 80px;
+  }
+  .wrap{max-width:920px;margin:0 auto;}
+  .masthead{
+    display:flex;justify-content:space-between;align-items:flex-end;
+    border-bottom:2px solid var(--brass);
+    padding-bottom:18px;margin-bottom:6px;
+  }
+  .masthead h1{
+    font-family:'Fraunces',serif;
+    font-weight:600;
+    font-size:36px;
+    margin:0;
+    letter-spacing:0.2px;
+  }
+  .case-no{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;color:var(--brass);
+    text-align:right;
+    letter-spacing:1px;
+  }
+  .subhead{
+    font-size:14px;color:#c9c2ac;margin:10px 0 32px;max-width:620px;line-height:1.6;
+  }
+  .stepper{
+    display:flex;gap:6px;margin-bottom:28px;flex-wrap:wrap;
+  }
+  .tab{
+    flex:1;min-width:150px;
+    background:var(--ink-2);
+    border:1px solid #2a3f6b;
+    border-bottom:3px solid #2a3f6b;
+    padding:10px 12px;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    color:#8b96b8;
+    transition:border-color .2s, color .2s;
+  }
+  .tab .n{color:var(--brass);margin-right:6px;}
+  .tab.active{border-bottom-color:var(--brass);color:var(--parchment);}
+  .tab.done{border-bottom-color:#5b8a5b;color:#cde3cd;}
+  .folder{
+    background:var(--parchment);
+    color:var(--text-dark);
+    border-radius:3px;
+    padding:28px 30px;
+    margin-bottom:22px;
+    position:relative;
+    box-shadow:0 12px 30px rgba(0,0,0,.35);
+  }
+  .folder h2{
+    font-family:'Fraunces',serif;font-weight:600;
+    font-size:19px;margin:0 0 4px;
+  }
+  .folder .eyebrow{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;letter-spacing:1.5px;text-transform:uppercase;
+    color:var(--brass-deep);margin-bottom:4px;
+  }
+  .folder p.desc{color:var(--text-muted);font-size:13px;margin:0 0 16px;}
+  textarea{
+    width:100%;min-height:220px;
+    font-family:'IBM Plex Mono',monospace;font-size:12.5px;line-height:1.55;
+    background:#fffdf7;border:1px solid var(--line);border-radius:2px;
+    padding:14px;color:var(--text-dark);resize:vertical;
+  }
+  .row{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;align-items:center;}
+  button{
+    font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.5px;
+    background:var(--ink);color:var(--parchment);
+    border:1px solid var(--ink);border-radius:2px;
+    padding:11px 18px;cursor:pointer;text-transform:uppercase;
+    transition:background .15s;
+  }
+  button:hover{background:var(--brass-deep);border-color:var(--brass-deep);}
+  button:disabled{opacity:.45;cursor:not-allowed;}
+  button.ghost{background:transparent;color:var(--brass-deep);border-color:var(--brass-deep);}
+  button.ghost:hover{background:#f0e6cc;color:var(--brass-deep);}
+  .hint{font-size:11.5px;color:var(--text-muted);font-family:'IBM Plex Mono',monospace;}
+  .status{font-size:12px;font-family:'IBM Plex Mono',monospace;margin-top:10px;min-height:16px;}
+  .status.ok{color:#3b6b3b;}
+  .status.err{color:var(--stamp-red);}
+  .status.busy{color:var(--brass-deep);}
+  .summary-text{font-size:14.5px;line-height:1.7;margin:0 0 18px;}
+  .block-title{
+    font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:1px;
+    text-transform:uppercase;color:var(--brass-deep);
+    border-bottom:1px solid var(--line);padding-bottom:6px;margin:20px 0 10px;
+  }
+  ul.plain{margin:0;padding-left:18px;font-size:14px;line-height:1.7;}
+  table.tracker{width:100%;border-collapse:collapse;font-size:13px;margin-top:4px;}
+  table.tracker th{
+    text-align:left;font-family:'IBM Plex Mono',monospace;font-size:10.5px;
+    text-transform:uppercase;letter-spacing:.5px;color:var(--brass-deep);
+    border-bottom:1px solid var(--text-dark);padding:6px 8px;
+  }
+  table.tracker td{padding:8px 8px;border-bottom:1px solid var(--line);vertical-align:top;}
+  table.tracker tr:last-child td{border-bottom:none;}
+  .owner-tag{
+    display:inline-block;background:var(--ink);color:var(--parchment);
+    font-family:'IBM Plex Mono',monospace;font-size:10.5px;padding:2px 7px;border-radius:2px;
+  }
+  .due{font-family:'IBM Plex Mono',monospace;color:var(--stamp-red);white-space:nowrap;}
+  .stamp{
+    position:absolute;top:22px;right:28px;
+    width:92px;height:92px;border:3px solid var(--stamp-red);border-radius:50%;
+    display:flex;align-items:center;justify-content:center;text-align:center;
+    transform:rotate(-11deg);opacity:0;transition:opacity .4s;
+    font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:11px;
+    letter-spacing:1px;color:var(--stamp-red);line-height:1.2;
+    pointer-events:none;
+  }
+  .stamp.show{opacity:.78;}
+  .stamp span{display:block;}
+  .log{
+    font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#a9b4d4;
+    background:rgba(0,0,0,.18);border:1px solid #2a3f6b;border-radius:2px;
+    padding:12px 14px;margin-top:8px;max-height:160px;overflow-y:auto;
+  }
+  .log .entry{margin-bottom:4px;}
+  .log .entry.ok{color:#a8d0a8;}
+  .log .entry.err{color:#e0a3a3;}
+  footer{
+    text-align:center;font-size:11px;color:#7d87a8;
+    font-family:'IBM Plex Mono',monospace;margin-top:30px;letter-spacing:.5px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="masthead">
+    <h1>AI Executive Workflow</h1>
+    <div class="case-no">CASE FILE NO. 2026-0812<br>MERIDIAN RETAIL CO.</div>
+  </div>
+  <p class="subhead">A raw meeting transcript, routed end to end: AI summary → decisions → action items → task tracker in Google Drive → follow-up email drafted in Gmail. Every stage below runs live.</p>
+
+  <div class="stepper" id="stepper">
+    <div class="tab active" data-step="0"><span class="n">01</span>Transcript</div>
+    <div class="tab" data-step="1"><span class="n">02</span>AI summary</div>
+    <div class="tab" data-step="2"><span class="n">03</span>Action items</div>
+    <div class="tab" data-step="3"><span class="n">04</span>Tracker → Drive</div>
+    <div class="tab" data-step="4"><span class="n">05</span>Follow-up email</div>
+  </div>
+
+  <div class="folder">
+    <div class="stamp" id="stamp-1"><span>RECEIVED</span><span>&amp; LOGGED</span></div>
+    <div class="eyebrow">Stage 01 — Input</div>
+    <h2>Raw meeting transcript</h2>
+    <p class="desc">Paste any messy transcript, or use the sample below (a Q3 review meeting at a fictional retail company).</p>
+    <textarea id="transcript"></textarea>
+    <div class="row">
+      <button id="btn-analyze">Run AI analysis →</button>
+      <span class="hint">Calls the Anthropic API live, no server involved.</span>
+    </div>
+    <div class="status" id="status-analyze"></div>
+  </div>
+
+  <div class="folder" id="folder-results" style="display:none;">
+    <div class="stamp" id="stamp-2"><span>PROCESSED</span><span>BY AI</span></div>
+    <div class="eyebrow">Stage 02–03 — Extracted from the transcript</div>
+    <h2>Meeting summary, decisions &amp; action items</h2>
+
+    <p class="summary-text" id="out-summary"></p>
+
+    <div class="block-title">Decisions</div>
+    <ul class="plain" id="out-decisions"></ul>
+
+    <div class="block-title">Action items</div>
+    <table class="tracker" id="out-actions">
+      <thead><tr><th>Owner</th><th>Task</th><th>Due</th></tr></thead>
+      <tbody></tbody>
+    </table>
+
+    <div class="block-title">Follow-ups</div>
+    <ul class="plain" id="out-followups"></ul>
+  </div>
+
+  <div class="folder" id="folder-drive" style="display:none;">
+    <div class="stamp" id="stamp-3"><span>FILED</span><span>IN DRIVE</span></div>
+    <div class="eyebrow">Stage 04 — Task tracker</div>
+    <h2>Send the action items to Google Drive</h2>
+    <p class="desc">Creates a tracker file directly in your connected Google Drive using the action items above.</p>
+    <div class="row">
+      <button id="btn-drive">Export tracker to Drive →</button>
+      <span class="hint" id="drive-filename"></span>
+    </div>
+    <div class="status" id="status-drive"></div>
+    <div class="log" id="log-drive" style="display:none;"></div>
+  </div>
+
+  <div class="folder" id="folder-email" style="display:none;">
+    <div class="stamp" id="stamp-4"><span>DRAFTED</span><span>IN GMAIL</span></div>
+    <div class="eyebrow">Stage 05 — Follow-up</div>
+    <h2>Draft the follow-up email</h2>
+    <p class="desc">Recipient for this demo (edit freely, then draft it in your connected Gmail):</p>
+    <div class="row">
+      <input id="email-to" type="text" placeholder="name@company.com" style="flex:1;min-width:220px;padding:10px;font-family:'IBM Plex Mono',monospace;font-size:12.5px;border:1px solid var(--line);border-radius:2px;">
+      <button id="btn-email">Draft follow-up in Gmail →</button>
+    </div>
+    <div class="status" id="status-email"></div>
+    <div class="log" id="log-email" style="display:none;"></div>
+  </div>
+
+  <footer>ANTHROPIC API · GOOGLE DRIVE MCP · GMAIL MCP — LIVE, NO BACKEND</footer>
+</div>
+
+<script>
+const SAMPLE_TRANSCRIPT = `Q3 GROWTH & PARTNERSHIPS REVIEW — MERIDIAN RETAIL CO. — AUGUST 11, 2026 (auto-transcribed, lightly cleaned)
+
+Okay, sorry, jumping in a bit late, traffic on the interchange was brutal. Are we recording? Good. Let's just get into it, we've got forty minutes and a lot to cover.
+
+So first up, the loyalty app numbers. Sanjay walked us through the July cohort and honestly retention past week two is still soft, we're at 34% and we wanted to be closer to 45% by now. Sanjay thinks it's an onboarding problem, not a product problem, and I actually agree with him after seeing the drop-off chart. People download it, they redeem the welcome offer, and then they vanish.
+
+Rafael brought up that two of our direct competitors, Home & Hearth and Larkspur Goods, both relaunched their loyalty tiers this spring and apparently their retention is noticeably better, though nobody in the room actually has hard numbers on that, it's mostly anecdotal from what Rafael's seen on social. So, decision point, we want real numbers before we copy anything. Rafael, can you actually dig into what Home & Hearth and Larkspur are doing structurally, tiers, point expiry, that kind of thing, and get us something concrete. Let's say by August 15th, that gives you a few days.
+
+Moving on. The marketing team, mainly Priya and her group, need to get moving on the Q4 campaign deck. We want it ready to walk the exec team through before the November 3rd launch date, which by the way, is now locked, we are not moving that date again. Marketing, deck needs to be ready by August 17th so leadership has time to react before we're too close to launch.
+
+There was a whole side conversation about whether we should push the launch to align with the shopping holiday weekend instead, but after going back and forth we're keeping November 3rd, mostly because the fulfillment team already committed inventory slots and moving it creates a mess upstream. So that's decided, November 3rd stands.
+
+Someone brought up the warehouse automation vendor evaluation, I think that was Denise. We had three vendors bid, and honestly two of them were way over budget. The one that's actually in range is called Northline Systems. Denise, has anyone actually gotten Northline on a call yet? Denise said no, not yet, they'd only exchanged emails. Okay, so that's a follow-up, somebody needs to actually get Northline Systems on a call, ideally before end of month.
+
+On the partnerships side, ABC Company reached back out, apparently they're still interested in the co-branded gift card program we pitched back in Q1 and just kind of went quiet on. Their VP emailed asking for an updated proposal. We should not let this go cold again. Someone needs to contact ABC Company directly, not just email back, actually get a call on the calendar, and also send them the updated proposal with the new commission structure we agreed on internally last month.
+
+Finance flagged that Q3 spend on paid social is tracking about 12% over budget, mostly because of the extended trial we ran in June that nobody formally closed out. We decided not to cut spend mid-quarter since the campaigns are actually performing, but Finance wants a written explanation for the overage before quarter close, that's on whoever owns the paid social budget, I believe that's Marketing again, so Priya's team.
+
+Quick one, HR mentioned the new store manager onboarding guide is still in draft after, I want to say, two months now. Nobody owned it after Jasmine left the team in June. We need someone to just pick that back up. I'll take that one myself actually, I'll assign it properly by next week.
+
+Back to the loyalty app for a second, because I don't think we fully closed the loop. Beyond Rafael's competitor research, we also want a quick internal audit of our own onboarding flow, screenshots, drop-off points, the works, before we redesign anything. That's a separate task from the competitor research. Sanjay, can your team put that together, say by the 20th.
+
+Somebody, I think it was Denise again, mentioned the loading dock camera system at the north distribution center went down again last week and IT apparently already knows but there's no ticket priority set. That needs to get escalated, it's a safety issue as much as an operations one.
+
+On the real estate side, the sublease for the old downtown showroom space is still sitting unsigned, legal sent comments back three weeks ago and nothing's moved since. We should not let that drag any further, someone from ops needs to close that out with legal this week.
+
+One more thing before we run out of time, the customer support team wants headcount approval for two more seasonal reps ahead of the Q4 launch, given the November 3rd date is locked and support volume always spikes around new launches. That's an approved decision from this meeting, two seasonal reps, support can move forward with recruiting.
+
+We also briefly touched on the possibility of a joint email campaign with ABC Company timed to the gift card program, but that's contingent on the proposal actually landing well, so parking that idea until we hear back from them.
+
+Last thing, next check-in on all of this, loyalty, ABC Company, Northline, the whole list, let's reconvene in two weeks, same time. I'll get an invite out. Okay, I think that's everything, thanks everyone, go have lunch.`;
+
+document.getElementById('transcript').value = SAMPLE_TRANSCRIPT;
+
+const els = {
+  btnAnalyze: document.getElementById('btn-analyze'),
+  statusAnalyze: document.getElementById('status-analyze'),
+  folderResults: document.getElementById('folder-results'),
+  outSummary: document.getElementById('out-summary'),
+  outDecisions: document.getElementById('out-decisions'),
+  outActions: document.querySelector('#out-actions tbody'),
+  outFollowups: document.getElementById('out-followups'),
+  folderDrive: document.getElementById('folder-drive'),
+  btnDrive: document.getElementById('btn-drive'),
+  statusDrive: document.getElementById('status-drive'),
+  driveFilename: document.getElementById('drive-filename'),
+  logDrive: document.getElementById('log-drive'),
+  folderEmail: document.getElementById('folder-email'),
+  btnEmail: document.getElementById('btn-email'),
+  statusEmail: document.getElementById('status-email'),
+  emailTo: document.getElementById('email-to'),
+  logEmail: document.getElementById('log-email'),
+};
+
+let extracted = null;
+let fileName = null;
+
+function setTab(idx, state){
+  const tab = document.querySelector(`.tab[data-step="${idx}"]`);
+  if(!tab) return;
+  tab.classList.remove('active','done');
+  if(state) tab.classList.add(state);
+}
+
+function showStamp(id){
+  const s = document.getElementById(id);
+  if(s) s.classList.add('show');
+}
+
+function setStatus(el, text, kind){
+  el.textContent = text;
+  el.className = 'status' + (kind ? ' '+kind : '');
+}
+
+async function callClaude(promptText, mcpServers){
+  const body = {
+    model: "claude-sonnet-4-6",
+    max_tokens: 1000,
+    messages: [{ role: "user", content: promptText }]
+  };
+  if(mcpServers) body.mcp_servers = mcpServers;
+  const resp = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body)
+  });
+  if(!resp.ok){
+    const t = await resp.text();
+    throw new Error(`API error ${resp.status}: ${t.slice(0,200)}`);
+  }
+  return resp.json();
+}
+
+function extractText(data){
+  return (data.content || [])
+    .filter(b => b.type === "text")
+    .map(b => b.text)
+    .join("\n");
+}
+
+els.btnAnalyze.addEventListener('click', async () => {
+  const transcript = document.getElementById('transcript').value.trim();
+  if(!transcript){ setStatus(els.statusAnalyze, 'Paste a transcript first.', 'err'); return; }
+
+  els.btnAnalyze.disabled = true;
+  setTab(0,'done'); setTab(1,'active');
+  setStatus(els.statusAnalyze, 'Running AI analysis…', 'busy');
+
+  const prompt = `You are an executive assistant. Read the raw meeting transcript below and extract a structured record. Respond with ONLY raw JSON, no markdown fences, no preamble, matching exactly this shape:
+{"summary": "2-4 sentence plain-English summary", "decisions": ["decision 1", "decision 2"], "action_items": [{"owner": "Name or Team", "task": "short task description", "due_date": "e.g. Aug 15"}], "follow_ups": ["follow up 1", "follow up 2"]}
+Keep owners as the specific person or team named in the transcript. Keep due dates as written or reasonably inferred. Keep it concise.
+
+TRANSCRIPT:
+"""${transcript}"""`;
+
+  try{
+    const data = await callClaude(prompt);
+    const raw = extractText(data).trim();
+    const jsonStr = raw.replace(/^```json/i,'').replace(/^```/,'').replace(/```$/,'').trim();
+    extracted = JSON.parse(jsonStr);
+
+    els.outSummary.textContent = extracted.summary || '';
+    els.outDecisions.innerHTML = (extracted.decisions||[]).map(d => `<li>${d}</li>`).join('');
+    els.outActions.innerHTML = (extracted.action_items||[]).map(a =>
+      `<tr><td><span class="owner-tag">${a.owner}</span></td><td>${a.task}</td><td class="due">${a.due_date||'—'}</td></tr>`
+    ).join('');
+    els.outFollowups.innerHTML = (extracted.follow_ups||[]).map(f => `<li>${f}</li>`).join('');
+
+    els.folderResults.style.display = 'block';
+    els.folderDrive.style.display = 'block';
+    els.folderEmail.style.display = 'block';
+    fileName = `Action Item Tracker - Meridian QBR - 12Aug2026.csv`;
+    els.driveFilename.textContent = `Will save as "${fileName}"`;
+
+    showStamp('stamp-2');
+    setTab(1,'done'); setTab(2,'done'); setTab(3,'active');
+    setStatus(els.statusAnalyze, 'Analysis complete.', 'ok');
+  }catch(err){
+    setStatus(els.statusAnalyze, 'Failed: ' + err.message, 'err');
+    setTab(1,'active');
+  }finally{
+    els.btnAnalyze.disabled = false;
+  }
+});
+
+els.btnDrive.addEventListener('click', async () => {
+  if(!extracted){ setStatus(els.statusDrive, 'Run the analysis first.', 'err'); return; }
+  els.btnDrive.disabled = true;
+  setStatus(els.statusDrive, 'Writing tracker to Google Drive…', 'busy');
+  els.logDrive.style.display = 'block';
+  els.logDrive.innerHTML = '';
+
+  const rows = (extracted.action_items||[]).map(a => `${a.owner},${a.task.replace(/,/g,';')},${a.due_date||''},Open`).join('\n');
+  const csv = `Owner,Task,Due Date,Status\n${rows}`;
+
+  const prompt = `Use the Google Drive tool to create a new file named exactly "${fileName}" with this exact CSV content, then confirm it was created and give the file id if available. Do not ask for confirmation, just create it.
+
+CSV CONTENT:
+${csv}`;
+
+  try{
+    const data = await callClaude(prompt, [{ type: "url", url: "https://drivemcp.googleapis.com/mcp/v1", name: "google-drive" }]);
+    const toolCalls = (data.content||[]).filter(b => b.type === "mcp_tool_use");
+    const toolResults = (data.content||[]).filter(b => b.type === "mcp_tool_result");
+    const textOut = extractText(data);
+
+    toolCalls.forEach(tc => {
+      els.logDrive.innerHTML += `<div class="entry">→ called ${tc.name}</div>`;
+    });
+    toolResults.forEach(tr => {
+      const t = tr.content?.[0]?.text || JSON.stringify(tr.content);
+      els.logDrive.innerHTML += `<div class="entry ok">← ${t.slice(0,180)}</div>`;
+    });
+    if(textOut) els.logDrive.innerHTML += `<div class="entry">${textOut.slice(0,300)}</div>`;
+
+    showStamp('stamp-3');
+    setTab(3,'done'); setTab(4,'active');
+    setStatus(els.statusDrive, `Tracker filed in Drive as "${fileName}".`, 'ok');
+  }catch(err){
+    setStatus(els.statusDrive, 'Failed: ' + err.message, 'err');
+  }finally{
+    els.btnDrive.disabled = false;
+  }
+});
+
+els.btnEmail.addEventListener('click', async () => {
+  if(!extracted){ setStatus(els.statusEmail, 'Run the analysis first.', 'err'); return; }
+  const to = els.emailTo.value.trim();
+  if(!to){ setStatus(els.statusEmail, 'Enter a recipient email address.', 'err'); return; }
+
+  els.btnEmail.disabled = true;
+  setStatus(els.statusEmail, 'Drafting follow-up in Gmail…', 'busy');
+  els.logEmail.style.display = 'block';
+  els.logEmail.innerHTML = '';
+
+  const followUpText = (extracted.follow_ups||[]).map(f => `- ${f}`).join('\n');
+  const actionText = (extracted.action_items||[]).map(a => `- ${a.owner}: ${a.task} (due ${a.due_date||'TBD'})`).join('\n');
+
+  const prompt = `Use the Gmail tool to create a draft email (do not send) to "${to}" with subject "Follow-up: Q3 Growth & Partnerships Review" and a short, professional body that references these follow-ups and open action items, then confirm the draft was created:
+
+FOLLOW-UPS:
+${followUpText}
+
+ACTION ITEMS:
+${actionText}
+
+Keep the email body under 150 words, plain text, no markdown.`;
+
+  try{
+    const data = await callClaude(prompt, [{ type: "url", url: "https://gmailmcp.googleapis.com/mcp/v1", name: "gmail" }]);
+    const toolCalls = (data.content||[]).filter(b => b.type === "mcp_tool_use");
+    const toolResults = (data.content||[]).filter(b => b.type === "mcp_tool_result");
+    const textOut = extractText(data);
+
+    toolCalls.forEach(tc => {
+      els.logEmail.innerHTML += `<div class="entry">→ called ${tc.name}</div>`;
+    });
+    toolResults.forEach(tr => {
+      const t = tr.content?.[0]?.text || JSON.stringify(tr.content);
+      els.logEmail.innerHTML += `<div class="entry ok">← ${t.slice(0,180)}</div>`;
+    });
+    if(textOut) els.logEmail.innerHTML += `<div class="entry">${textOut.slice(0,300)}</div>`;
+
+    showStamp('stamp-4');
+    setTab(4,'done');
+    setStatus(els.statusEmail, 'Draft created in Gmail.', 'ok');
+  }catch(err){
+    setStatus(els.statusEmail, 'Failed: ' + err.message, 'err');
+  }finally{
+    els.btnEmail.disabled = false;
+  }
+});
+</script>
+</body>
+</html>
