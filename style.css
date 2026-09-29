@@ -147,3 +147,16 @@ a{color:inherit;text-decoration:none}
   html{scroll-behavior:auto}
   .reveal{opacity:1}
 }
+
+/* TrackIt screenshots */
+.slide.has-shots{padding-right:64%}
+.shots{position:absolute;right:calc(min(24%,220px) + 1.5rem);top:50%;transform:translateY(-50%);display:flex;gap:.7rem}
+.shots img{height:min(330px,60vh);width:auto;border-radius:16px;border:1px solid var(--line);box-shadow:0 16px 40px rgba(0,0,0,.45)}
+.shots img:nth-child(2){margin-top:2rem}
+@media(max-width:1000px){.shots img:nth-child(3){display:none}.slide.has-shots{padding-right:58%}}
+@media(max-width:860px){
+  .slide.has-shots{padding-right:clamp(1.8rem,5vw,3.5rem)}
+  .shots{position:static;transform:none;margin-top:1.2rem}
+  .shots img{height:190px}.shots img:nth-child(2){margin-top:0}.shots img:nth-child(3){display:block}
+}
+@media(max-width:860px){.slider{min-height:660px}}
